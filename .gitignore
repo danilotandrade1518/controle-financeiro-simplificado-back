@@ -5,3 +5,4 @@ coverage/
 # Não ignore migrations em TS
 # Ignore migrations compiladas (caso gere .js)
 migrations/*.js
+ai.properties.md
