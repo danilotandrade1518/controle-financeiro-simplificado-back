@@ -2,6 +2,14 @@
 
 Este comando finaliza o processo de desenvolvimento criando e submetendo um Pull Request para revisão.
 
+## Configuração do Jira
+
+As configurações do Jira estão no arquivo `ai.properties.md` na raiz do projeto:
+- `jira_cloud_id`: ID do cloud Atlassian para chamadas MCP
+- `jira_project_key`: Chave do projeto (ex: TID)
+- `jira_project_id`: ID numérico do projeto
+- `jira_base_url`: URL base do Jira
+
 ## Objetivo
 
 Criar um Pull Request bem documentado e pronto para revisão humana, seguindo todos os padrões e processos estabelecidos.
@@ -60,8 +68,46 @@ Refs: [ID da issue/card]
 
 #### Status da Task
 
-- Mova o card/issue para status **"In Review"** no Jira
-- Adicione comentário com link do PR quando criado
+- Mova o card/issue para status **"In Review"** no Jira usando as configurações do `ai.properties.md`:
+  ```typescript
+  const jiraCloudId = 'jira_cloud_id do ai.properties.md';
+  const jiraProjectKey = 'jira_project_key do ai.properties.md';
+
+  // 1. Buscar task
+  const searchResults = await mcp__atlassian__searchJiraIssuesUsingJql({
+    cloudId: jiraCloudId,
+    jql: `project = ${jiraProjectKey} AND summary ~ "${feature_slug}"`,
+    fields: ['summary', 'status']
+  });
+
+  // 2. Obter transições disponíveis
+  const transitions = await mcp__atlassian__getTransitionsForJiraIssue({
+    cloudId: jiraCloudId,
+    issueIdOrKey: searchResults.issues[0].key
+  });
+
+  // 3. Encontrar transição para "In Review" / "Em Revisão"
+  const reviewTransition = transitions.find(
+    (t) => t.name.includes('Review') || t.name.includes('Revisão')
+  );
+
+  // 4. Fazer transição
+  if (reviewTransition) {
+    await mcp__atlassian__transitionJiraIssue({
+      cloudId: jiraCloudId,
+      issueIdOrKey: searchResults.issues[0].key,
+      transition: { id: reviewTransition.id }
+    });
+  }
+  ```
+- Adicione comentário com link do PR quando criado:
+  ```typescript
+  await mcp__atlassian__addCommentToJiraIssue({
+    cloudId: jiraCloudId,
+    issueIdOrKey: 'ISSUE_KEY',
+    commentBody: '🔗 Pull Request criado: [PR_URL]'
+  });
+  ```
 - Atualize estimativas se necessário
 
 #### Documentação

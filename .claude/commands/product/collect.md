@@ -65,13 +65,32 @@ Uma issue bem coletada deve conter:
 - Apresente ao usuário para validação e ajustes
 - Faça as modificações necessárias até aprovação
 
+## Configuração do Jira
+
+As configurações do Jira estão no arquivo `ai.properties.md` na raiz do projeto:
+- `jira_cloud_id`: ID do cloud Atlassian para chamadas MCP
+- `jira_project_key`: Chave do projeto (ex: TID)
+- `jira_project_id`: ID numérico do projeto
+- `jira_base_url`: URL base do Jira
+
 ### 4. Registro da Issue
 
-Após aprovação, registre a issue no sistema de gestão configurado:
+Após aprovação, registre a issue no Jira usando as configurações do `ai.properties.md`:
 
-- Jira
-- Acessar via MCP
-- Se houver falha, utilize o sistema de fallback local em `tasks/backlog/`
+```typescript
+const jiraCloudId = 'jira_cloud_id do ai.properties.md';
+const jiraProjectKey = 'jira_project_key do ai.properties.md';
+
+await mcp__atlassian__createJiraIssue({
+  cloudId: jiraCloudId,
+  projectKey: jiraProjectKey,
+  issueTypeName: 'História', // ou 'Tarefa', 'Bug', etc. conforme tipo identificado
+  summary: 'TÍTULO_DA_ISSUE',
+  description: 'DESCRIÇÃO_ESTRUTURADA'
+});
+```
+
+- Se houver falha na criação via MCP, utilize o sistema de fallback local em `tasks/backlog/`
 
 ## Template de Issue
 

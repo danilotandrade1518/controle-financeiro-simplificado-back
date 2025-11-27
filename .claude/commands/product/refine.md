@@ -12,11 +12,26 @@ Você é um especialista em produto encarregado de refinar requisitos usando o f
 
 Transformar uma coleta inicial de requisitos em uma especificação estruturada e bem definida, preparando-a para desenvolvimento ou especificação detalhada.
 
+## Configuração do Jira
+
+As configurações do Jira estão no arquivo `ai.properties.md` na raiz do projeto:
+- `jira_cloud_id`: ID do cloud Atlassian para chamadas MCP
+- `jira_project_key`: Chave do projeto (ex: TID)
+- `jira_project_id`: ID numérico do projeto
+- `jira_base_url`: URL base do Jira
+
 ## Processo de Refinamento
 
 ### 1. Análise Inicial
 
-- Se tiver sido fornecido um issue id, busque no Jira via MCP esta issue
+- Se tiver sido fornecido um issue id, busque no Jira via MCP usando as configurações do `ai.properties.md`:
+  ```typescript
+  const jiraCloudId = 'jira_cloud_id do ai.properties.md';
+  const issue = await mcp__atlassian__getJiraIssue({
+    cloudId: jiraCloudId,
+    issueIdOrKey: 'ISSUE_ID_FORNECIDO'
+  });
+  ```
 - Revise o requisito inicial fornecido
 - Identifique gaps de informação ou ambiguidades
 - Prepare perguntas de esclarecimento focadas
@@ -90,7 +105,17 @@ Após aprovação, estruture os requisitos no formato padrão:
 
 ### 5. Registro e Atualização
 
-- Atualize a issue no Jira via MCP
+- Atualize a issue no Jira via MCP usando as configurações do `ai.properties.md`:
+  ```typescript
+  const jiraCloudId = 'jira_cloud_id do ai.properties.md';
+  await mcp__atlassian__editJiraIssue({
+    cloudId: jiraCloudId,
+    issueIdOrKey: 'ISSUE_KEY',
+    fields: {
+      description: 'NOVA_DESCRIÇÃO_FORMATADA'
+    }
+  });
+  ```
 - Mantenha rastreabilidade com a coleta original
 - Prepare para próxima fase (especificação detalhada)
 

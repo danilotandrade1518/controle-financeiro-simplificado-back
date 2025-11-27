@@ -8,6 +8,14 @@ Antes de executar este comando, leia o arquivo `ai.properties.md` na raiz do pro
 
 Se o arquivo não existir ou não estiver configurado, use a URL padrão do GitHub.
 
+### Configuração do Jira
+
+As configurações do Jira estão no arquivo `ai.properties.md`:
+- `jira_cloud_id`: ID do cloud Atlassian para chamadas MCP
+- `jira_project_key`: Chave do projeto (ex: TID)
+- `jira_project_id`: ID numérico do projeto
+- `jira_base_url`: URL base do Jira
+
 ## Argumentos da Sessão
 
 <feature_slug>
@@ -18,8 +26,33 @@ Se o arquivo não existir ou não estiver configurado, use a URL padrão do GitH
 
 Estabelecer o contexto inicial de desenvolvimento, criar documentação de sessão e preparar o ambiente para implementação estruturada.
 <feature_slug> se refere ao identificador único da funcionalidade, usado para organizar arquivos e pastas.
-Você deve buscar a task correspondente no Jira via MCP para obter os detalhes.
-Caso não encontre, páre e informe ao usuário.
+
+### Busca da Task no Jira
+
+Você deve buscar a task correspondente no Jira via MCP usando as configurações do `ai.properties.md`:
+
+```typescript
+// 1. Ler configurações do ai.properties.md
+const jiraCloudId = 'jira_cloud_id do ai.properties.md';
+const jiraProjectKey = 'jira_project_key do ai.properties.md';
+
+// 2. Buscar task usando JQL
+const searchResults = await mcp__atlassian__searchJiraIssuesUsingJql({
+  cloudId: jiraCloudId,
+  jql: `project = ${jiraProjectKey} AND summary ~ "${feature_slug}"`,
+  fields: ['summary', 'description', 'status', 'issuetype', 'priority']
+});
+
+// 3. Se encontrar, obter detalhes completos
+if (searchResults.issues?.length > 0) {
+  const issue = await mcp__atlassian__getJiraIssue({
+    cloudId: jiraCloudId,
+    issueIdOrKey: searchResults.issues[0].key
+  });
+}
+```
+
+Caso não encontre a task, páre e informe ao usuário.
 
 ## ⚠️ AÇÃO IMEDIATA OBRIGATÓRIA
 

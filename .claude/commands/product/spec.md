@@ -101,6 +101,14 @@ Construa uma especificação detalhada cobrindo os elementos relevantes:
 - Itere até alcançar 100% de clareza
 - Obtenha aprovação explícita antes de finalizar
 
+## Configuração do Jira
+
+As configurações do Jira estão no arquivo `ai.properties.md` na raiz do projeto:
+- `jira_cloud_id`: ID do cloud Atlassian para chamadas MCP
+- `jira_project_key`: Chave do projeto (ex: TID)
+- `jira_project_id`: ID numérico do projeto
+- `jira_base_url`: URL base do Jira
+
 ### 5. Finalização
 
 Após aprovação:
@@ -108,7 +116,29 @@ Após aprovação:
 - Atualize o documento/issue de requisitos
 - Enriqueça com todas as descobertas do processo
 - Prepare para fase de arquitetura técnica
-- Registre no Jira
+- Registre/atualize no Jira usando as configurações do `ai.properties.md`:
+  ```typescript
+  const jiraCloudId = 'jira_cloud_id do ai.properties.md';
+  const jiraProjectKey = 'jira_project_key do ai.properties.md';
+
+  // Se for nova issue
+  await mcp__atlassian__createJiraIssue({
+    cloudId: jiraCloudId,
+    projectKey: jiraProjectKey,
+    issueTypeName: 'História', // ou 'Tarefa', 'Bug', etc.
+    summary: 'TÍTULO_DA_FUNCIONALIDADE',
+    description: 'PRD_COMPLETO_EM_MARKDOWN'
+  });
+
+  // Se for atualização de issue existente
+  await mcp__atlassian__editJiraIssue({
+    cloudId: jiraCloudId,
+    issueIdOrKey: 'ISSUE_KEY',
+    fields: {
+      description: 'PRD_COMPLETO_EM_MARKDOWN'
+    }
+  });
+  ```
 
 ## Template de PRD
 

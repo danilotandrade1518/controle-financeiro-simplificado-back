@@ -8,6 +8,14 @@ Antes de executar este comando, leia o arquivo `ai.properties.md` na raiz do pro
 
 Se o arquivo não existir ou não estiver configurado, use a URL padrão do GitHub.
 
+### Configuração do Jira
+
+As configurações do Jira estão no arquivo `ai.properties.md`:
+- `jira_cloud_id`: ID do cloud Atlassian para chamadas MCP
+- `jira_project_key`: Chave do projeto (ex: TID)
+- `jira_project_id`: ID numérico do projeto
+- `jira_base_url`: URL base do Jira
+
 ## Argumentos da Sessão
 
 <folder>
@@ -615,12 +623,13 @@ const consistencyCheck = await validateConsistency({
 
 **_Este passo só deve ser feito se o trabaho ainda não iniciou. Verifique o status do plano para esta informação. Caso o plano já esteja em andamento, ou seja, se alguma fase já iniciou, ignore este passo._**
 
-**Fluxo Automático**:
+**Fluxo Automático** (usando configurações do `ai.properties.md`):
 
-1. **Buscar Task**: Use `mcp__atlassian__search` com o nome da pasta da sessão
-2. **Identificar Transições**: Use `mcp__atlassian__getTransitionsForJiraIssue` para encontrar transição "Em Progresso"
-3. **Atualizar Status**: Use `mcp__atlassian__transitionJiraIssue` para fazer a transição
-4. **Confirmar**: Informe ao usuário: "✅ Task {KEY} atualizada para 'Em Progresso'"
+1. **Ler Configurações**: Leia `jira_cloud_id` e `jira_project_key` do `ai.properties.md`
+2. **Buscar Task**: Use `mcp__atlassian__searchJiraIssuesUsingJql` com JQL do projeto
+3. **Identificar Transições**: Use `mcp__atlassian__getTransitionsForJiraIssue` para encontrar transição "Em Progresso"
+4. **Atualizar Status**: Use `mcp__atlassian__transitionJiraIssue` para fazer a transição
+5. **Confirmar**: Informe ao usuário: "✅ Task {KEY} atualizada para 'Em Progresso'"
 
 **Tratamento de Erros**:
 
@@ -631,19 +640,22 @@ const consistencyCheck = await validateConsistency({
 **Exemplo de Execução**:
 
 ```typescript
-// 1. Buscar cloudId
-const resources = await mcp__atlassian__getAccessibleAtlassianResources();
+// 1. Ler configurações do ai.properties.md
+const jiraCloudId = 'jira_cloud_id do ai.properties.md';
+const jiraProjectKey = 'jira_project_key do ai.properties.md';
 
-// 2. Buscar task baseada na pasta da sessão
-const searchResults = await mcp__atlassian__search({
-  query: '{folder-name}',
+// 2. Buscar task usando JQL no projeto configurado
+const searchResults = await mcp__atlassian__searchJiraIssuesUsingJql({
+  cloudId: jiraCloudId,
+  jql: `project = ${jiraProjectKey} AND summary ~ "${folder}"`,
+  fields: ['summary', 'status', 'issuetype']
 });
 
 // 3. Se encontrou, fazer transição
 if (searchResults.issues?.length > 0) {
   const issue = searchResults.issues[0];
   const transitions = await mcp__atlassian__getTransitionsForJiraIssue({
-    cloudId: resources[0].id,
+    cloudId: jiraCloudId,
     issueIdOrKey: issue.key,
   });
 
@@ -654,7 +666,7 @@ if (searchResults.issues?.length > 0) {
 
   if (inProgressTransition) {
     await mcp__atlassian__transitionJiraIssue({
-      cloudId: resources[0].id,
+      cloudId: jiraCloudId,
       issueIdOrKey: issue.key,
       transition: { id: inProgressTransition.id },
     });
